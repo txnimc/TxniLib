@@ -24,7 +24,7 @@ val settings = object : TxniTemplateSettings {
 	// For configuring the dependecies that will show up on your mod page.
 	override val publishHandler: PublishDependencyHandler get() = object : PublishDependencyHandler {
 		override fun addShared(deps: DependencyContainer) {
-			if (isFabric) {
+			if (mod.isFabric) {
 				deps.requires("fabric-api")
 			}
 		}
@@ -46,6 +46,8 @@ val settings = object : TxniTemplateSettings {
 
 plugins {
 	`maven-publish`
+	txnitemplate
+	application
 	kotlin("jvm")
 	kotlin("plugin.serialization")
 	id("dev.kikugie.j52j") version "1.0"
@@ -57,45 +59,20 @@ plugins {
 // The manifold Gradle plugin version. Update this if you update your IntelliJ Plugin!
 manifold { manifoldVersion = "2024.1.31" }
 
-// Variables
-class ModData {
-	val id = property("mod.id").toString()
-	val name = property("mod.name").toString()
-	val version = property("mod.version").toString()
-	val group = property("mod.group").toString()
-	val author = property("mod.author").toString()
-	val namespace = property("mod.namespace").toString()
-	val displayName = property("mod.display_name").toString()
-	val description = property("mod.description").toString()
-	val mcDep = property("mod.mc_dep").toString()
-	val license = property("mod.license").toString()
-	val github = property("mod.github").toString()
-	val clientuser = property("client.user").toString()
-	val clientuuid = property("client.uuid").toString()
+txnitemplate {
+	sc = stonecutter
+	init()
 }
 
-val mod = ModData()
+val mod = txnitemplate.mod
 
-val mcVersion = stonecutter.current.project.substringBeforeLast('-')
-val isActive = stonecutter.active.project == stonecutter.current.project
-val loader = loom.platform.get().name.lowercase()
-val isFabric = loader == "fabric"
-val isForge = loader == "forge"
-val isNeo = loader == "neoforge"
 
-version = "${mod.version}-$mcVersion"
-group = mod.group
-base { archivesName.set("${mod.id}-$loader") }
 
 // Dependencies
 repositories {
-	fun strictMaven(url: String, vararg groups: String) = exclusiveContent {
-		forRepository { maven(url) }
-		filter { groups.forEach(::includeGroup) }
-	}
-	strictMaven("https://www.cursemaven.com", "curse.maven")
-	strictMaven("https://api.modrinth.com/maven", "maven.modrinth")
-	strictMaven("https://thedarkcolour.github.io/KotlinForForge/", "thedarkcolour")
+	exclusiveMaven("https://www.cursemaven.com", "curse.maven")
+	exclusiveMaven("https://api.modrinth.com/maven", "maven.modrinth")
+	exclusiveMaven("https://thedarkcolour.github.io/KotlinForForge/", "thedarkcolour")
 	maven("https://maven.kikugie.dev/releases")
 	maven("https://jitpack.io")
 	maven("https://maven.neoforged.net/releases/")
@@ -106,18 +83,13 @@ repositories {
 }
 
 dependencies {
-	minecraft("com.mojang:minecraft:${mcVersion}")
-
-	compileOnly("org.projectlombok:lombok:1.18.34")
-	annotationProcessor("org.projectlombok:lombok:1.18.34")
-
 	// apply the Manifold processor, do not remove this unless you want to swap back to Stonecutter preprocessor
 	implementation(annotationProcessor("systems.manifold:manifold-preprocessor:${manifold.manifoldVersion.get()}")!!)
 
 	@Suppress("UnstableApiUsage")
 	mappings(loom.layered {
 		officialMojangMappings()
-		val parchmentVersion = when (mcVersion) {
+		val parchmentVersion = when (mod.mcVersion) {
 			"1.18.2" -> "1.18.2:2022.11.06"
 			"1.19.2" -> "1.19.2:2022.11.27"
 			"1.20.1" -> "1.20.1:2023.09.03"
@@ -129,32 +101,38 @@ dependencies {
 
 	settings.depsHandler.addGlobal(this)
 
-	if (isFabric) {
+	if (mod.isFabric) {
 		modImplementation(settings.depsHandler.modrinth("modmenu", property("deps.modmenu")))
 
 		settings.depsHandler.addFabric(this)
 		modImplementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fapi")}")
 		modImplementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
 
-		// JarJar Forge Config API
-		include(when (mcVersion) {
-			"1.19.2" -> modApi("net.minecraftforge:forgeconfigapiport-fabric:${property("deps.forgeconfigapi")}")
-			else -> modApi("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${property("deps.forgeconfigapi")}")
-		}!!)
+		if (setting("runtime.sodium"))
+			modRuntimeOnly(settings.depsHandler.modrinth("sodium", when (mod.mcVersion) {
+				"1.21.1" -> "mc1.21-0.6.0-beta.1-fabric"
+				"1.20.1" -> "mc1.20.1-0.5.11"
+				else -> null
+			}))
 	}
 
-	if (isForge) {
+	if (mod.isForge) {
 		settings.depsHandler.addForge(this)
-		"forge"("net.minecraftforge:forge:${mcVersion}-${property("deps.fml")}")
+		"forge"("net.minecraftforge:forge:${mod.mcVersion}-${property("deps.fml")}")
 	}
 
-	if (isNeo) {
+	if (mod.isNeo) {
 		settings.depsHandler.addNeo(this)
 		"neoForge"("net.neoforged:neoforge:${property("deps.fml")}")
+
+		if (setting("runtime.sodium"))
+			runtimeOnly(settings.depsHandler.modrinth("sodium", "mc1.21-0.6.0-beta.1-neoforge"))
 	}
 
 	vineflowerDecompilerClasspath("org.vineflower:vineflower:1.10.1")
 }
+
+fun setting(prop : String) : Boolean = property(prop) == "true"
 
 // Loom config
 loom {
@@ -162,17 +140,17 @@ loom {
 	if (awFile.exists())
 		accessWidenerPath.set(awFile)
 
-	if (loader == "forge") forge {
+	if (mod.loader == "forge") forge {
 		convertAccessWideners.set(true)
 		mixinConfigs("mixins.${mod.id}.json")
 	}
 
-	if (isActive) {
+	if (mod.isActive) {
 		runConfigs.all {
 			ideConfigGenerated(true)
-			vmArgs("-Dmixin.debug.export=true")
+			//vmArgs("-Dmixin.debug.export=true", "-Dsodium.checks.issue2561=false")
 			// Mom look I'm in the codebase!
-			programArgs("--username=${mod.clientuser}", "--uuid=${mod.clientuuid}")
+			//programArgs("--username=${mod.clientuser}", "--uuid=${mod.clientuuid}")
 			runDir = "../../run/${stonecutter.current.project}/"
 		}
 	}
@@ -208,22 +186,28 @@ sourceSets {
 // Tasks
 tasks {
 	remapJar {
-		if (isNeo) {
+		if (mod.isNeo) {
 			atAccessWideners.add("${mod.id}.accesswidener")
 		}
 	}
 }
 
-tasks.withType<JavaCompile>() {
+tasks.compileJava {
+	options.encoding = "UTF-8"
 	options.compilerArgs.add("-Xplugin:Manifold")
 	// modify the JavaCompile task and inject our auto-generated Manifold symbols
-	if(!this.name.startsWith("_")) { // check the name, so we don't inject into Forge internal compilation
-		ManifoldMC.setupPreprocessor(options.compilerArgs, loader, projectDir, mcVersion, stonecutter.active.project == stonecutter.current.project, false)
+	doFirst {
+		if(!this.name.startsWith("_")) { // check the name, so we don't inject into Forge internal compilation
+			ManifoldMC.setupPreprocessor(options.compilerArgs, mod.loader, projectDir, mod.mcVersion, stonecutter.active.project == stonecutter.current.project, false)
+		}
 	}
 }
 
 project.tasks.register("setupManifoldPreprocessors") {
-	ManifoldMC.setupPreprocessor(ArrayList(), loader, projectDir, mcVersion, stonecutter.active.project == stonecutter.current.project, true)
+	group = "build"
+	doLast {
+		ManifoldMC.setupPreprocessor(ArrayList(), mod.loader, projectDir, mod.mcVersion, stonecutter.active.project == stonecutter.current.project, true)
+	}
 }
 
 tasks.setupChiseledBuild { finalizedBy("setupManifoldPreprocessors") }
@@ -252,6 +236,19 @@ if (stonecutter.current.isActive) {
 	}
 }
 
+stonecutter {
+	val j21 = eval(mod.mcVersion, ">=1.20.6")
+	java {
+		withSourcesJar()
+		sourceCompatibility = if (j21) JavaVersion.VERSION_21 else JavaVersion.VERSION_17
+		targetCompatibility = if (j21) JavaVersion.VERSION_21 else JavaVersion.VERSION_17
+	}
+
+	kotlin {
+		jvmToolchain(if (j21) 21 else 17)
+	}
+}
+
 tasks.processResources {
 	val map = mapOf(
 		"version" to mod.version,
@@ -265,8 +262,8 @@ tasks.processResources {
 		"license" to mod.license,
 		"github" to mod.github,
 		"display_name" to mod.displayName,
-		"fml" to if (loader == "neoforge") "1" else "45",
-		"mnd" to if (loader == "neoforge") "" else "mandatory = true"
+		"fml" to if (mod.loader == "neoforge") "1" else "45",
+		"mnd" to if (mod.loader == "neoforge") "" else "mandatory = true"
 	)
 
 	filesMatching("fabric.mod.json") { expand(map) }
@@ -274,28 +271,15 @@ tasks.processResources {
 	filesMatching("META-INF/neoforge.mods.toml") { expand(map) }
 }
 
-stonecutter {
-	val j21 = eval(mcVersion, ">=1.20.6")
-	java {
-		withSourcesJar()
-		sourceCompatibility = if (j21) JavaVersion.VERSION_21 else JavaVersion.VERSION_17
-		targetCompatibility = if (j21) JavaVersion.VERSION_21 else JavaVersion.VERSION_17
-	}
-
-	kotlin {
-		jvmToolchain(if (j21) 21 else 17)
-	}
-}
-
 // Publishing
 publishMods {
 	file = tasks.remapJar.get().archiveFile
 	additionalFiles.from(tasks.remapSourcesJar.get().archiveFile)
-	displayName = "${mod.name} ${loader.replaceFirstChar { it.uppercase() }} ${mod.version} for ${property("mod.mc_title")}"
+	displayName = "${mod.name} ${mod.loader.replaceFirstChar { it.uppercase() }} ${mod.version} for ${property("mod.mc_title")}"
 	version = mod.version
 	changelog = rootProject.file("CHANGELOG.md").readText()
 	type = STABLE
-	modLoaders.add(loader)
+	modLoaders.add(mod.loader)
 
 	val targets = property("mod.mc_targets").toString().split(' ')
 
@@ -326,7 +310,7 @@ publishing {
 		create<MavenPublication>("mavenJava") {
 			groupId = "${property("mod.group")}.${mod.id}"
 			version = mod.version
-			artifactId = "$loader-$mcVersion" //base.archivesName.get()
+			artifactId = "${mod.loader}-${mod.mcVersion}" //base.archivesName.get()
 
 			from(components["java"])
 		}

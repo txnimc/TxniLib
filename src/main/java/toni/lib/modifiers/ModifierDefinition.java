@@ -1,9 +1,13 @@
 package toni.lib.modifiers;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import toni.lib.VersionUtils;
+
+import java.util.UUID;
 
 public class ModifierDefinition
 {

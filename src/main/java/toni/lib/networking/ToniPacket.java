@@ -21,7 +21,7 @@ import java.util.function.Consumer;
     import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
     #endif
 #else
-    import toni.libold.networking.codecs.StreamCodec;
+    import toni.lib.networking.codecs.StreamCodec;
 #endif
 
 public abstract class ToniPacket <TPacket extends ToniPacket> #if AFTER_21_1 implements CustomPacketPayload #endif
