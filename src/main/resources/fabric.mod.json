@@ -37,9 +37,9 @@
 		"modmenu": {
 			"links": {
 				"modmenu.discord": "${discord}"
-			}
+			},
+			"badges": [ "library" ]
 		}
 	},
-			"badges": [ "library" ]
 	"accessWidener": "${id}.accesswidener"
 }
