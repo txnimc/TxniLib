@@ -44,7 +44,7 @@ public class AnimationTimeline {
         // loop over the list of transitions on the timeline
         for (var kvp : transitions.entrySet()) {
             // they should be sorted, so it's safe to just grab the first start value, and treat them all as if they're not overlapping
-            float value = kvp.getValue().getFirst().getStartValue();
+            float value = kvp.getValue().get(0).getStartValue();
             for (var transition : kvp.getValue()) {
                 switch (transition.getPosition(current)) {
                     case DURING -> value = transition.eval(kvp.getKey(), current);
