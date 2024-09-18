@@ -5,7 +5,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import toni.lib.VersionUtils;
+import toni.lib.utils.VersionUtils;
 import java.util.function.Consumer;
 
 #if FABRIC

@@ -1,10 +1,9 @@
-package toni.lib;
+package toni.lib.utils;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 
 public class VersionUtils
 {
@@ -13,6 +12,14 @@ public class VersionUtils
         return ResourceLocation.fromNamespaceAndPath(modid, path);
         #else
         return new ResourceLocation(modid, path);
+        #endif
+    }
+
+    public static ResourceLocation resource(String path) {
+        #if AFTER_21_1
+        return ResourceLocation.parse(path);
+        #else
+        return new ResourceLocation(path);
         #endif
     }
 

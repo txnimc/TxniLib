@@ -40,6 +40,9 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 #endif
 
+import toni.lib.utils.*;
+import static toni.lib.utils.VersionUtils.*;
+import static toni.lib.utils.PlatformUtils.*;
 
 #if FORGELIKE
 @Mod("txnilib")

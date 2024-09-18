@@ -5,7 +5,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import toni.lib.VersionUtils;
+import toni.lib.utils.VersionUtils;
 
 import java.util.UUID;
 
