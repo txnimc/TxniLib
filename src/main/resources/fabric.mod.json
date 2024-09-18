@@ -36,10 +36,10 @@
 	"custom": {
 		"modmenu": {
 			"links": {
-				"modmenu.discord": "https://discord.gg/kS7auUeYmc"
-			},
-			"badges": [ "library" ]
+				"modmenu.discord": "${discord}"
+			}
 		}
 	},
+			"badges": [ "library" ]
 	"accessWidener": "${id}.accesswidener"
 }
