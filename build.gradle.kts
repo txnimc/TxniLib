@@ -55,7 +55,7 @@ plugins {
 }
 
 // The manifold Gradle plugin version. Update this if you update your IntelliJ Plugin!
-manifold { manifoldVersion = "2024.1.30" }
+manifold { manifoldVersion = "2024.1.31" }
 
 // Variables
 class ModData {
@@ -107,6 +107,9 @@ repositories {
 
 dependencies {
 	minecraft("com.mojang:minecraft:${mcVersion}")
+
+	compileOnly("org.projectlombok:lombok:1.18.34")
+	annotationProcessor("org.projectlombok:lombok:1.18.34")
 
 	// apply the Manifold processor, do not remove this unless you want to swap back to Stonecutter preprocessor
 	implementation(annotationProcessor("systems.manifold:manifold-preprocessor:${manifold.manifoldVersion.get()}")!!)
