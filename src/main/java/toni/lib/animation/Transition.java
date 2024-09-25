@@ -3,6 +3,7 @@ package toni.lib.animation;
 import it.unimi.dsi.fastutil.doubles.Double2DoubleFunction;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import toni.lib.animation.easing.EasingFunctionArgs;
@@ -27,7 +28,33 @@ public class Transition implements IAnimationEffect {
     @Getter @Setter
     private float endValue;
 
-    private List<Double2DoubleFunction> easingFunctions = new ArrayList<>();
+    private EasingType easingFunctionTypeCache;
+    private Double easingFunctionArgCache;
+
+    private Double2DoubleFunction easingFunction;
+
+    public void encode(FriendlyByteBuf buf) {
+        buf.writeFloat(in);
+        buf.writeFloat(out);
+        buf.writeFloat(startValue);
+        buf.writeFloat(endValue);
+
+        buf.writeEnum(easingFunctionTypeCache);
+        buf.writeDouble(easingFunctionArgCache);
+    }
+
+    public static Transition decode(FriendlyByteBuf buf) {
+
+        var in = buf.readFloat();
+        var out = buf.readFloat();
+        var startValue = buf.readFloat();
+        var endValue = buf.readFloat();
+
+        var easingFunctionTypeCache = buf.readEnum(EasingType.class);
+        var easingFunctionArgCache = buf.readDouble();
+
+        return new Transition(in, out, easingFunctionTypeCache, startValue, endValue, easingFunctionArgCache);
+    }
 
     public Transition(float in, float out, EasingType easing, float start, float end) {
         this.in = in;
@@ -35,7 +62,10 @@ public class Transition implements IAnimationEffect {
         this.startValue = start;
         this.endValue = end;
 
-        easingFunctions.add(EasingManager.getEasingFunction.apply(new EasingFunctionArgs(easing, null)));
+        easingFunctionTypeCache = easing;
+        easingFunctionArgCache = 1.0d;
+
+        easingFunction = EasingManager.getEasingFunction.apply(new EasingFunctionArgs(easing, null));
     }
 
     public Transition(float in, float out, EasingType easing, float start, float end, double elasticity) {
@@ -44,15 +74,15 @@ public class Transition implements IAnimationEffect {
         this.startValue = start;
         this.endValue = end;
 
-        easingFunctions.add(EasingManager.getEasingFunction.apply(new EasingFunctionArgs(easing, elasticity)));
+        easingFunctionTypeCache = easing;
+        easingFunctionArgCache = elasticity;
+
+        easingFunction = EasingManager.getEasingFunction.apply(new EasingFunctionArgs(easing, elasticity));
     }
 
     public float eval(Binding binding, float current) {
         var lerp = Mth.clamp((double) (current - in) / (out - in), 0f, 1f);
-
-        for (Double2DoubleFunction f : easingFunctions) {
-            lerp = f.apply(lerp);
-        }
+        lerp = easingFunction.apply(lerp);
 
         lerp = Mth.clamp(lerp, 0, 1f);
 
@@ -61,5 +91,7 @@ public class Transition implements IAnimationEffect {
 
         return (float) Mth.lerp(lerp, startValue, endValue);
     }
+
+
 }
 

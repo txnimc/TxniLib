@@ -1,6 +1,7 @@
 package toni.lib.animation;
 
 
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.FastColor;
 
 public class AnimationKeyframe {
@@ -13,6 +14,32 @@ public class AnimationKeyframe {
     public float size = 1f;
     public float alpha = 1f;
     public float color = FastColor.ARGB32.color(255, 255, 255, 255);
+
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeFloat(rotX);
+        buffer.writeFloat(rotY);
+        buffer.writeFloat(rotZ);
+        buffer.writeFloat(posX);
+        buffer.writeFloat(posY);
+        buffer.writeFloat(posZ);
+        buffer.writeFloat(size);
+        buffer.writeFloat(alpha);
+        buffer.writeFloat(color);
+    }
+
+    public static AnimationKeyframe decode(FriendlyByteBuf buffer) {
+        AnimationKeyframe keyframe = new AnimationKeyframe();
+        keyframe.rotX = buffer.readFloat();
+        keyframe.rotY = buffer.readFloat();
+        keyframe.rotZ = buffer.readFloat();
+        keyframe.posX = buffer.readFloat();
+        keyframe.posY = buffer.readFloat();
+        keyframe.posZ = buffer.readFloat();
+        keyframe.size = buffer.readFloat();
+        keyframe.alpha = buffer.readFloat();
+        keyframe.color = buffer.readFloat();
+        return keyframe;
+    }
 
     public void setValue(Binding key, float value) {
         switch (key) {
@@ -41,4 +68,6 @@ public class AnimationKeyframe {
             case Color -> color;
         };
     }
+
+
 }

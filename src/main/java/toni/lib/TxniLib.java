@@ -1,6 +1,5 @@
 package toni.lib;
 
-import toni.lib.foundation.config.AllConfigs;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -62,39 +61,18 @@ public class TxniLib #if FABRIC implements ModInitializer, ClientModInitializer 
         #if FORGELIKE
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::clientSetup);
-
-        AllConfigs.register((type, spec) -> {
-            #if FORGE
-            ModLoadingContext.get().registerConfig(type, spec);
-            #elif NEO
-            modContainer.registerConfig(type, spec);
-            modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
-            #endif
-        });
         #endif
     }
 
 
     #if FABRIC @Override #endif
     public void onInitialize() {
-        #if FABRIC
-            AllConfigs.register((type, spec) -> {
-                #if AFTER_21_1
-                NeoForgeConfigRegistry.INSTANCE.register(TxniLib.ID, type, spec);
-                #else
-                ForgeConfigRegistry.INSTANCE.register(TxniLib.ID, type, spec);
-                #endif
-            });
-        #endif
+        System.out.println("TxniLib onInitialize!!");
     }
 
     #if FABRIC @Override #endif
     public void onInitializeClient() {
-        #if AFTER_21_1
-            #if FABRIC
-            ConfigScreenFactoryRegistry.INSTANCE.register(TxniLib.ID, ConfigurationScreen::new);
-            #endif
-        #endif
+
     }
 
     // Forg event stubs to call the Fabric initialize methods, and set up cloth config screen

@@ -11,11 +11,22 @@ val settings = object : TxniTemplateSettings {
 		}
 
 		override fun addForge(deps: DependencyHandlerScope) {
-
+			deps.include(deps.modApi("dev.su5ed.sinytra:fabric-loader:2.7.4+0.15.3+1.20.1")!!)
+			deps.include(deps.modApi("dev.su5ed.sinytra.fabric-api:fabric-api-base:+")!!)
+			deps.include(deps.modApi("dev.su5ed.sinytra.fabric-api:fabric-rendering-v1:+")!!)
+			deps.include(deps.modApi("dev.su5ed.sinytra.fabric-api:fabric-events-interaction-v0:+")!!)
+			deps.include(deps.modApi("dev.su5ed.sinytra.fabric-api:fabric-networking-api-v1:+")!!)
+			deps.include(deps.modApi("dev.su5ed.sinytra.fabric-api:fabric-command-api-v2:2.2.13+561530ec77")!!)
 		}
 
-		override fun addNeo(deps: DependencyHandlerScope) {
 
+		override fun addNeo(deps: DependencyHandlerScope) {
+			deps.include(deps.modApi("org.sinytra:forgified-fabric-loader:2.5.33+0.16.0+1.21.1")!!)
+			deps.include(deps.modApi("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")!!)
+			deps.include(deps.modApi("org.sinytra.forgified-fabric-api:fabric-networking-api-v1:4.2.2+a6c6b14f19")!!)
+			deps.include(deps.modApi("org.sinytra.forgified-fabric-api:fabric-rendering-v1:5.0.5+2df007aa19")!!)
+			deps.include(deps.modApi("org.sinytra.forgified-fabric-api:fabric-events-interaction-v0:0.7.12+7b71cc1619")!!)
+			deps.include(deps.modApi("org.sinytra.forgified-fabric-api:fabric-command-api-v2:2.2.28+36d727be19")!!)
 		}
 	}
 
@@ -269,6 +280,9 @@ tasks.processResources {
 	filesMatching("fabric.mod.json") { expand(map) }
 	filesMatching("META-INF/mods.toml") { expand(map) }
 	filesMatching("META-INF/neoforge.mods.toml") { expand(map) }
+
+	if (!mod.isFabric)
+		exclude("fabric.mod.json")
 }
 
 // Publishing
@@ -311,6 +325,14 @@ publishing {
 			groupId = "${property("mod.group")}.${mod.id}"
 			version = mod.version
 			artifactId = "${mod.loader}-${mod.mcVersion}" //base.archivesName.get()
+
+			setOf("apiElements", "runtimeElements")
+				.flatMap { configName -> configurations[configName].hierarchy }
+				.forEach { configuration ->
+					configuration.dependencies.removeIf { dependency ->
+						dependency.name.contains("sodium") || dependency.name.contains("manifold")
+					}
+				}
 
 			from(components["java"])
 		}

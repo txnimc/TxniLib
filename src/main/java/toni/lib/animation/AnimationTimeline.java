@@ -1,8 +1,10 @@
 package toni.lib.animation;
 
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import toni.lib.animation.easing.EasingType;
@@ -17,8 +19,8 @@ public class AnimationTimeline {
 
     @Getter @Setter
     private float current;
-    private final AnimationKeyframe effected_keyframe = new AnimationKeyframe();
-    private final AnimationKeyframe keyframe = new AnimationKeyframe();
+    private AnimationKeyframe effected_keyframe = new AnimationKeyframe();
+    private AnimationKeyframe keyframe = new AnimationKeyframe();
 
     private boolean hasSortedTransitions = false;
     private final HashMap<Binding, List<Transition>> transitions = new HashMap<>();
@@ -31,6 +33,57 @@ public class AnimationTimeline {
 
     private AnimationTimeline(float duration) {
         this.duration = duration;
+    }
+
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeFloat(duration);
+        buffer.writeFloat(current);
+        effected_keyframe.encode(buffer);
+        keyframe.encode(buffer);
+
+        buffer.writeMap(transitions, FriendlyByteBuf::writeEnum, (buf, val) -> {
+            buf.writeVarInt(val.size());
+            val.forEach(i -> i.encode(buf));
+        });
+
+        buffer.writeMap(effects, FriendlyByteBuf::writeEnum, (buf, val) -> {
+            buf.writeVarInt(val.size());
+            val.forEach(i -> i.encode(buf));
+        });
+    }
+
+    public static AnimationTimeline decode(FriendlyByteBuf buffer) {
+        var duration = buffer.readFloat();
+        var current = buffer.readFloat();
+        var effected_keyframe = AnimationKeyframe.decode(buffer);
+        var keyframe = AnimationKeyframe.decode(buffer);
+
+        var transitions = buffer.readMap(enumClass -> buffer.readEnum(Binding.class), (buf) -> {
+            var size = buffer.readVarInt();
+            var list = new ArrayList<Transition>();
+            for (int i = 0; i < size; i++) {
+                list.add(Transition.decode(buf));
+            }
+            return list;
+        });
+
+        var effects = buffer.readMap(enumClass -> buffer.readEnum(Binding.class), (buf) -> {
+            var size = buffer.readVarInt();
+            var list = new ArrayList<AnimationEffect>();
+            for (int i = 0; i < size; i++) {
+                list.add(AnimationEffect.decode(buf));
+            }
+            return list;
+        });
+
+        var ths = new AnimationTimeline(duration);
+        ths.current = current;
+        ths.effected_keyframe = effected_keyframe;
+        ths.keyframe = keyframe;
+        ths.transitions.putAll(transitions);
+        ths.effects.putAll(effects);
+
+        return ths;
     }
 
     public AnimationKeyframe getKeyframe() {
@@ -63,7 +116,7 @@ public class AnimationTimeline {
 
             for (var effect : effects.get(key)) {
                 if (effect.getPosition(current) == IAnimationEffect.Position.DURING)
-                    effected_keyframe.setValue(key, keyframe.getValue(key) + effect.transformer.apply(current));
+                    effected_keyframe.setValue(key, keyframe.getValue(key) + effect.type.calculate(effect, current));
             }
         }
 
@@ -182,7 +235,7 @@ public class AnimationTimeline {
         if (!effects.containsKey(binding))
             effects.put(binding, new ArrayList<>());
 
-        effects.get(binding).add(new AnimationEffect(in, out, (time) -> intensity * Mth.cos(speed * time)));
+        effects.get(binding).add(new AnimationEffect(in, out, intensity, speed, AnimationEffect.Type.WAVE));
         return this;
     }
 
