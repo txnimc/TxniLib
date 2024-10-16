@@ -4,8 +4,12 @@ package toni.lib.utils;
 import net.fabricmc.loader.api.FabricLoader;
 #elif FORGE
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.LoadingModList;
+import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 #else
 import net.neoforged.fml.ModList;
+import net.neoforged.fml.loading.LoadingModList;
+import net.neoforged.fml.loading.moddiscovery.ModInfo;
 #endif
 
 public class PlatformUtils {
@@ -14,6 +18,9 @@ public class PlatformUtils {
         #if FABRIC
         return FabricLoader.getInstance().isModLoaded(modid);
         #else
+        if (ModList.get() == null) {
+            return LoadingModList.get().getMods().stream().map(ModInfo::getModId).anyMatch(modid::equals);
+        }
         return ModList.get().isLoaded(modid);
         #endif
     }

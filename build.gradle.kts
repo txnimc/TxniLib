@@ -21,7 +21,7 @@ val settings = object : TxniTemplateSettings {
 
 
 		override fun addNeo(deps: DependencyHandlerScope) {
-			deps.include(deps.modApi("org.sinytra:forgified-fabric-loader:2.5.33+0.16.0+1.21.1")!!)
+			deps.include(deps.modApi("org.sinytra:forgified-fabric-loader:2.5.29+0.16.0+1.21")!!)
 			deps.include(deps.modApi("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")!!)
 			deps.include(deps.modApi("org.sinytra.forgified-fabric-api:fabric-networking-api-v1:4.2.2+a6c6b14f19")!!)
 			deps.include(deps.modApi("org.sinytra.forgified-fabric-api:fabric-rendering-v1:5.0.5+2df007aa19")!!)
