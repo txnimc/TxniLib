@@ -2,7 +2,7 @@
 	"schemaVersion": 1,
 	"id": "${id}",
 	"name": "${display_name}",
-	"version": "${version}",
+	"version": "${modversion}",
 	"description": "${description}",
 	"authors": [
 		"${author}"
@@ -26,8 +26,8 @@
 		"mixins.${id}.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.15.0",
 		"minecraft": "${mc}",
+		"fabricloader": ">=0.15.0",
 		"fabric-api": "*"
 	},
 	"custom": {

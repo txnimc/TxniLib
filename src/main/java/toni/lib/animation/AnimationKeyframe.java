@@ -2,7 +2,7 @@ package toni.lib.animation;
 
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.FastColor;
+import toni.lib.utils.ColorUtils;
 
 public class AnimationKeyframe {
     public float rotX;
@@ -13,7 +13,7 @@ public class AnimationKeyframe {
     public float posZ;
     public float size = 1f;
     public float alpha = 1f;
-    public float color = FastColor.ARGB32.color(255, 255, 255, 255);
+    public float color = ColorUtils.color(255, 255, 255, 255);
 
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeFloat(rotX);

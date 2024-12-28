@@ -5,8 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+import toni.lib.utils.ColorUtils;
 import toni.lib.animation.easing.EasingType;
 import toni.lib.animation.effects.IAnimationEffect;
 
@@ -138,11 +138,11 @@ public class AnimationTimeline {
 
     public int getColor() {
         var keyframe = getKeyframe();
-        return FastColor.ARGB32.color(
+        return ColorUtils.color(
                 Mth.clamp((int) (keyframe.alpha * 255 + 5), 0, 255),
-                FastColor.ARGB32.red((int) keyframe.color),
-                FastColor.ARGB32.green((int) keyframe.color),
-                FastColor.ARGB32.blue((int) keyframe.color));
+                ColorUtils.red((int) keyframe.color),
+                ColorUtils.green((int) keyframe.color),
+                ColorUtils.blue((int) keyframe.color));
     }
 
 
@@ -158,7 +158,7 @@ public class AnimationTimeline {
     }
 
     public AnimationTimeline withColor(int alpha, int red, int green, int blue) {
-        keyframe.color = FastColor.ARGB32.color(alpha, red, green, blue);
+        keyframe.color = ColorUtils.color(alpha, red, green, blue);
         return this;
     }
 

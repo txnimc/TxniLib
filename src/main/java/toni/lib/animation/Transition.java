@@ -4,12 +4,12 @@ import it.unimi.dsi.fastutil.doubles.Double2DoubleFunction;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import toni.lib.animation.easing.EasingFunctionArgs;
 import toni.lib.animation.easing.EasingManager;
 import toni.lib.animation.easing.EasingType;
 import toni.lib.animation.effects.IAnimationEffect;
+import toni.lib.utils.ColorUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +87,7 @@ public class Transition implements IAnimationEffect {
         lerp = Mth.clamp(lerp, 0, 1f);
 
         if (binding == Binding.Color)
-            return FastColor.ARGB32.lerp((float) lerp, (int) startValue, (int) endValue);
+            return ColorUtils.lerp((float) lerp, (int) startValue, (int) endValue);
 
         return (float) Mth.lerp(lerp, startValue, endValue);
     }
