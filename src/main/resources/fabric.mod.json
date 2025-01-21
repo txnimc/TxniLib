@@ -2,8 +2,8 @@
 	"schemaVersion": 1,
 	"id": "${id}",
 	"name": "${display_name}",
-	"version": "${modversion}",
 	"description": "${description}",
+	"version": "${modversion}",
 	"authors": [
 		"${author}"
 	],
